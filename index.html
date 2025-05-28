@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chat z ChatGPT + Obrazki + Kod</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -20,7 +21,8 @@
       text-align: center;
     }
 
-    textarea, button {
+    textarea,
+    button {
       padding: 10px;
       font-size: 16px;
       margin-top: 10px;
@@ -74,6 +76,7 @@
     }
   </style>
 </head>
+
 <body>
   <h1>Chat z ChatGPT</h1>
   <div id="chat"></div>
@@ -137,16 +140,35 @@
     }
 
     function formatReply(text) {
-      return text
-        .replace(/```([a-z]*)\s*([\s\S]*?)```/g, (match, lang, code) => {
-          lang = lang || '';
-          return `<pre><code class="language-${lang}">${escapeHtml(code.trim())}</code></pre>`;
-        })
-        .replace(/\n/g, "<br>");
+      let parts = [];
+      let regex = /```([a-z]*)\s*([\s\S]*?)```/g;
+      let lastIndex = 0;
+      let match;
+
+      while ((match = regex.exec(text)) !== null) {
+        // część zwykłego tekstu
+        const before = text.slice(lastIndex, match.index)
+          .replace(/\n/g, "<br>");
+        parts.push(before);
+
+        // część kodu
+        const lang = match[1] || '';
+        const code = escapeHtml(match[2].trim());
+        parts.push(`<pre><code class="language-${lang}">${code}</code></pre>`);
+
+        lastIndex = regex.lastIndex;
+      }
+
+      // wszystko po ostatnim bloku kodu
+      const after = text.slice(lastIndex).replace(/\n/g, "<br>");
+      parts.push(after);
+
+      return parts.join('');
     }
 
+
     function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, function(m) {
+      return str.replace(/[&<>"']/g, function (m) {
         return ({
           '&': '&amp;',
           '<': '&lt;',
@@ -162,4 +184,5 @@
     });
   </script>
 </body>
+
 </html>
