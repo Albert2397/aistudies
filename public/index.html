@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>ChatGPT na stronie</title>
+  <style>
+    body { font-family: Arial; margin: 30px; }
+    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
+    #chat p { margin: 5px 0; }
+    .user { font-weight: bold; }
+    .bot { color: green; }
+  </style>
+</head>
+<body>
+  <h2>ChatGPT</h2>
+  <div id="chat"></div>
+  <form id="form">
+    <input type="text" id="input" placeholder="Zadaj pytanie..." style="width: 80%;" required />
+    <button type="submit">Wyślij</button>
+  </form>
+
+  <script>
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
+    const chat = document.getElementById("chat");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = input.value;
+      chat.innerHTML += `<p class="user">Ty: ${message}</p>`;
+      input.value = "";
+
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      const data = await response.json();
+      chat.innerHTML += `<p class="bot">ChatGPT: ${data.response}</p>`;
+      chat.scrollTop = chat.scrollHeight;
+    });
+  </script>
+</body>
+</html>
