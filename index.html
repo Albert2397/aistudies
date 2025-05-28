@@ -3,12 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ChatGPT na GitHub Pages</title>
+  <title>Chat z ChatGPT</title>
   <style>
-    body { font-family: Arial; max-width: 600px; margin: auto; padding: 2em; }
-    #chat p { background: #eee; padding: 10px; border-radius: 5px; margin: 5px 0; }
-    #chat p.user { background: #cce5ff; }
-    #chat p.bot { background: #d4edda; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1e1e1e; /* ciemnoszare tło */
+      color: #f0f0f0;
+      max-width: 600px;
+      margin: auto;
+      padding: 2em;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    input {
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #444;
+    }
+
+    button {
+      background-color: #444;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+
+    #chat p {
+      padding: 10px;
+      border-radius: 5px;
+      margin: 5px 0;
+    }
+
+    #chat p.user {
+      background-color: #2d3e50;
+    }
+
+    #chat p.bot {
+      background-color: #3b3b3b;
+    }
   </style>
 </head>
 <body>
@@ -28,7 +71,7 @@
       chatDiv.innerHTML += `<p class="user"><strong>Ty:</strong> ${userMessage}</p>`;
 
       try {
-        const response = await fetch('https://chatgpt-vercel-backend-mrglpxrzv-albert97s-projects.vercel.app', {
+        const response = await fetch('https://twoja-nazwa-backendu.vercel.app/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
