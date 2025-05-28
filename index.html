@@ -2,44 +2,47 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <title>ChatGPT na stronie</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChatGPT na GitHub Pages</title>
   <style>
-    body { font-family: Arial; margin: 30px; }
-    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
-    #chat p { margin: 5px 0; }
-    .user { font-weight: bold; }
-    .bot { color: green; }
+    body { font-family: Arial; max-width: 600px; margin: auto; padding: 2em; }
+    #chat p { background: #eee; padding: 10px; border-radius: 5px; margin: 5px 0; }
+    #chat p.user { background: #cce5ff; }
+    #chat p.bot { background: #d4edda; }
   </style>
 </head>
 <body>
-  <h2>ChatGPT</h2>
+  <h1>Chat z ChatGPT</h1>
   <div id="chat"></div>
-  <form id="form">
-    <input type="text" id="input" placeholder="Zadaj pytanie..." style="width: 80%;" required />
-    <button type="submit">Wyślij</button>
-  </form>
+  <input id="input" placeholder="Napisz coś..." />
+  <button onclick="sendMessage()">Wyślij</button>
 
   <script>
-    const form = document.getElementById("form");
-    const input = document.getElementById("input");
-    const chat = document.getElementById("chat");
+    async function sendMessage() {
+      const input = document.getElementById('input');
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const message = input.value;
-      chat.innerHTML += `<p class="user">Ty: ${message}</p>`;
-      input.value = "";
+      input.value = '';
+      const chatDiv = document.getElementById('chat');
+      chatDiv.innerHTML += `<p class="user"><strong>Ty:</strong> ${userMessage}</p>`;
 
-      const response = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
+      try {
+        const response = await fetch('https://chatgpt-vercel-backend-mrglpxrzv-albert97s-projects.vercel.app', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{ role: "user", content: userMessage }]
+          })
+        });
 
-      const data = await response.json();
-      chat.innerHTML += `<p class="bot">ChatGPT: ${data.response}</p>`;
-      chat.scrollTop = chat.scrollHeight;
-    });
+        const data = await response.json();
+        const reply = data.choices?.[0]?.message?.content ?? 'Brak odpowiedzi';
+        chatDiv.innerHTML += `<p class="bot"><strong>ChatGPT:</strong> ${reply}</p>`;
+      } catch (error) {
+        chatDiv.innerHTML += `<p class="bot"><strong>Błąd:</strong> ${error.message}</p>`;
+      }
+    }
   </script>
 </body>
 </html>
