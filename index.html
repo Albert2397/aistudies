@@ -3,16 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat z ChatGPT + Obrazek</title>
+  <title>Chat z ChatGPT + Obrazki + Kod</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #1e1e1e;
       color: #f0f0f0;
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
       padding: 2em;
     }
+
+    h1 {
+      text-align: center;
+    }
+
     textarea, button {
       padding: 10px;
       font-size: 16px;
@@ -20,22 +27,51 @@
       width: 100%;
       box-sizing: border-box;
     }
+
     textarea {
       background-color: #333;
       color: #fff;
       border: 1px solid #444;
       resize: vertical;
     }
+
     button {
       background-color: #444;
       color: #fff;
       border: none;
       cursor: pointer;
     }
-    #chat p { padding: 10px; border-radius: 5px; margin: 5px 0; }
-    #chat p.user { background-color: #2d3e50; }
-    #chat p.bot { background-color: #3b3b3b; }
-    #preview img { max-width: 100%; margin-top: 10px; border-radius: 6px; }
+
+    button:hover {
+      background-color: #555;
+    }
+
+    #chat p {
+      padding: 10px;
+      border-radius: 5px;
+      margin: 5px 0;
+    }
+
+    #chat p.user {
+      background-color: #2d3e50;
+    }
+
+    #chat p.bot {
+      background-color: #3b3b3b;
+    }
+
+    #preview img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+
+    pre {
+      background-color: #2d2d2d;
+      padding: 1em;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
   </style>
 </head>
 <body>
@@ -79,7 +115,7 @@
       };
 
       if (pastedImage) {
-        body.image = pastedImage; // base64 image
+        body.image = pastedImage;
       }
 
       pastedImage = null;
@@ -93,11 +129,37 @@
 
         const data = await response.json();
         const reply = data.choices?.[0]?.message?.content ?? 'Brak odpowiedzi';
-        chatDiv.innerHTML += `<p class="bot"><strong>ChatGPT:</strong> ${reply}</p>`;
+        chatDiv.innerHTML += `<p class="bot"><strong>ChatGPT:</strong><br>${formatReply(reply)}</p>`;
+        document.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
       } catch (error) {
         chatDiv.innerHTML += `<p class="bot"><strong>Błąd:</strong> ${error.message}</p>`;
       }
     }
+
+    function formatReply(text) {
+      return text
+        .replace(/```([a-z]*)\s*([\s\S]*?)```/g, (match, lang, code) => {
+          lang = lang || '';
+          return `<pre><code class="language-${lang}">${escapeHtml(code.trim())}</code></pre>`;
+        })
+        .replace(/\n/g, "<br>");
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[m];
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      hljs.highlightAll();
+    });
   </script>
 </body>
 </html>
