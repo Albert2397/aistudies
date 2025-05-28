@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="pl">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chat z ChatGPT + Obrazki + Kod</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat z ChatGPT</title>
+
+  <!-- Highlight.js style + script -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -21,8 +23,7 @@
       text-align: center;
     }
 
-    textarea,
-    button {
+    textarea, button {
       padding: 10px;
       font-size: 16px;
       margin-top: 10px;
@@ -58,8 +59,15 @@
       background-color: #2d3e50;
     }
 
-    #chat p.bot {
+    .bot {
       background-color: #3b3b3b;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    .bot-content {
+      margin-top: 10px;
     }
 
     #preview img {
@@ -74,9 +82,20 @@
       border-radius: 5px;
       overflow-x: auto;
     }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    .copy-btn:hover {
+      color: #fff;
+    }
   </style>
 </head>
-
 <body>
   <h1>Chat z ChatGPT</h1>
   <div id="chat"></div>
@@ -132,7 +151,17 @@
 
         const data = await response.json();
         const reply = data.choices?.[0]?.message?.content ?? 'Brak odpowiedzi';
-        chatDiv.innerHTML += `<p class="bot"><strong>ChatGPT:</strong><br>${formatReply(reply)}</p>`;
+
+        const replyHTML = `
+          <div class="bot">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong>ChatGPT:</strong>
+              <button class="copy-btn" onclick="copyToClipboard(this)">📋 Kopiuj</button>
+            </div>
+            <div class="bot-content">${formatReply(reply)}</div>
+          </div>`;
+        chatDiv.innerHTML += replyHTML;
+
         document.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
       } catch (error) {
         chatDiv.innerHTML += `<p class="bot"><strong>Błąd:</strong> ${error.message}</p>`;
@@ -146,12 +175,10 @@
       let match;
 
       while ((match = regex.exec(text)) !== null) {
-        // część zwykłego tekstu
         const before = text.slice(lastIndex, match.index)
           .replace(/\n/g, "<br>");
         parts.push(before);
 
-        // część kodu
         const lang = match[1] || '';
         const code = escapeHtml(match[2].trim());
         parts.push(`<pre><code class="language-${lang}">${code}</code></pre>`);
@@ -159,16 +186,14 @@
         lastIndex = regex.lastIndex;
       }
 
-      // wszystko po ostatnim bloku kodu
       const after = text.slice(lastIndex).replace(/\n/g, "<br>");
       parts.push(after);
 
       return parts.join('');
     }
 
-
     function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, function (m) {
+      return str.replace(/[&<>"']/g, function(m) {
         return ({
           '&': '&amp;',
           '<': '&lt;',
@@ -179,10 +204,19 @@
       });
     }
 
+    function copyToClipboard(button) {
+      const content = button.closest(".bot").querySelector(".bot-content").innerText;
+      navigator.clipboard.writeText(content).then(() => {
+        button.textContent = "✅ Skopiowano";
+        setTimeout(() => {
+          button.textContent = "📋 Kopiuj";
+        }, 2000);
+      });
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       hljs.highlightAll();
     });
   </script>
 </body>
-
 </html>
