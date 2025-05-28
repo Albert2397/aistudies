@@ -3,80 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat z ChatGPT</title>
+  <title>Chat z ChatGPT + Obrazek</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #1e1e1e; /* ciemnoszare tło */
+      background-color: #1e1e1e;
       color: #f0f0f0;
       max-width: 600px;
       margin: auto;
       padding: 2em;
     }
-
-    input, button {
+    textarea, button {
       padding: 10px;
       font-size: 16px;
       margin-top: 10px;
       width: 100%;
       box-sizing: border-box;
     }
-
-    input {
+    textarea {
       background-color: #333;
       color: #fff;
       border: 1px solid #444;
+      resize: vertical;
     }
-
     button {
       background-color: #444;
       color: #fff;
       border: none;
       cursor: pointer;
     }
-
-    button:hover {
-      background-color: #555;
-    }
-
-    #chat p {
-      padding: 10px;
-      border-radius: 5px;
-      margin: 5px 0;
-    }
-
-    #chat p.user {
-      background-color: #2d3e50;
-    }
-
-    #chat p.bot {
-      background-color: #3b3b3b;
-    }
+    #chat p { padding: 10px; border-radius: 5px; margin: 5px 0; }
+    #chat p.user { background-color: #2d3e50; }
+    #chat p.bot { background-color: #3b3b3b; }
+    #preview img { max-width: 100%; margin-top: 10px; border-radius: 6px; }
   </style>
 </head>
 <body>
   <h1>Chat z ChatGPT</h1>
   <div id="chat"></div>
-  <input id="input" placeholder="Napisz coś..." />
+  <textarea id="input" rows="3" placeholder="Wklej tekst lub obrazek..."></textarea>
+  <div id="preview"></div>
   <button onclick="sendMessage()">Wyślij</button>
 
   <script>
+    let pastedImage = null;
+
+    document.getElementById("input").addEventListener("paste", (event) => {
+      const items = event.clipboardData.items;
+      for (let item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          const file = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            pastedImage = e.target.result;
+            document.getElementById("preview").innerHTML = `<img src="${pastedImage}" alt="Wklejony obrazek">`;
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    });
+
     async function sendMessage() {
-      const input = document.getElementById('input');
+      const input = document.getElementById("input");
       const userMessage = input.value.trim();
-      if (!userMessage) return;
+      const chatDiv = document.getElementById("chat");
+
+      if (!userMessage && !pastedImage) return;
 
       input.value = '';
-      const chatDiv = document.getElementById('chat');
-      chatDiv.innerHTML += `<p class="user"><strong>Ty:</strong> ${userMessage}</p>`;
+      document.getElementById("preview").innerHTML = '';
+      chatDiv.innerHTML += `<p class="user"><strong>Ty:</strong> ${userMessage || '[Obrazek]'}</p>`;
+
+      const body = {
+        messages: [{ role: "user", content: userMessage || "[Obrazek]" }],
+      };
+
+      if (pastedImage) {
+        body.image = pastedImage; // base64 image
+      }
+
+      pastedImage = null;
 
       try {
-        const response = await fetch('https://chatgpt-vercel-backend-six.vercel.app/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [{ role: "user", content: userMessage }]
-          })
+        const response = await fetch("https://chatgpt-vercel-backend-six.vercel.app/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
         });
 
         const data = await response.json();
