@@ -71,7 +71,7 @@
       chatDiv.innerHTML += `<p class="user"><strong>Ty:</strong> ${userMessage}</p>`;
 
       try {
-        const response = await fetch('https://twoja-nazwa-backendu.vercel.app/api/chat', {
+        const response = await fetch('https://chatgpt-vercel-backend-six.vercel.app/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
