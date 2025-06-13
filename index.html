@@ -6,6 +6,7 @@
   <title>Chat z ChatGPT</title>
 
   <!-- Highlight.js -->
+  <link rel="icon" href="favicon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
@@ -103,6 +104,13 @@
       max-width: 200px;
       margin-left: 10px;
     }
+
+    #stats {
+      text-align: right;
+      font-size: 0.9em;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -112,6 +120,7 @@
   </div>
 
   <div id="chat"></div>
+  <div id="stats">Tokeny: 0 • Koszt: $0.0000</div>
   <textarea id="input" rows="3" placeholder="Wklej tekst lub obrazek..."></textarea>
   <div id="preview"></div>
   <button onclick="sendMessage()">Wyślij</button>
@@ -119,8 +128,12 @@
   <script>
     const messageHistory = [];
     let pastedImage = null;
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
 
-    document.getElementById("input").addEventListener("paste", (event) => {
+    const input = document.getElementById("input");
+
+    input.addEventListener("paste", (event) => {
       const items = event.clipboardData.items;
       for (let item of items) {
         if (item.type.indexOf("image") !== -1) {
@@ -135,8 +148,14 @@
       }
     });
 
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
     async function sendMessage() {
-      const input = document.getElementById("input");
       const userMessage = input.value.trim();
       const chatDiv = document.getElementById("chat");
 
@@ -149,8 +168,14 @@
       const userEntry = { role: "user", content: userMessage || "[Obrazek]" };
       messageHistory.push(userEntry);
 
-      const body = { messages: messageHistory };
-      if (pastedImage) body.image = pastedImage;
+      const body = {
+        model: "gpt-4-turbo",
+        messages: messageHistory
+      };
+
+      if (pastedImage) {
+        body.image = pastedImage;
+      }
 
       pastedImage = null;
 
@@ -164,6 +189,10 @@
         const data = await response.json();
         const reply = data.choices?.[0]?.message?.content ?? 'Brak odpowiedzi';
         messageHistory.push({ role: "assistant", content: reply });
+
+        totalInputTokens += estimateTokens(userMessage);
+        totalOutputTokens += estimateTokens(reply);
+        updateStats();
 
         const replyHTML = `
           <div class="bot">
@@ -183,7 +212,20 @@
 
     function resetChat() {
       messageHistory.length = 0;
+      totalInputTokens = 0;
+      totalOutputTokens = 0;
+      updateStats();
       document.getElementById("chat").innerHTML = "";
+    }
+
+    function updateStats() {
+      const total = totalInputTokens + totalOutputTokens;
+      const cost = (totalInputTokens / 1000 * 0.01) + (totalOutputTokens / 1000 * 0.03);
+      document.getElementById("stats").textContent = `Tokeny: ${total} • Koszt: $${cost.toFixed(4)}`;
+    }
+
+    function estimateTokens(text) {
+      return Math.ceil((text || "").length / 4); // przybliżenie: 1 token ≈ 4 znaki
     }
 
     function formatReply(text) {
